@@ -1,0 +1,23 @@
+{
+    "RESOURCE_TYPE": "HERITAGE_RESOURCE.E18",
+    "GEOM_TYPE": "SPATIAL_COORDINATES_GEOMETRY.E47",
+    "FIELD_MAP": [
+        {
+        "Group1": {
+            "name1":"NAME.E41",
+            "name_t":"NAME_TYPE.E55"
+            }
+        },
+        {
+        "Group2": {
+            "heri_type":"HERITAGE_RESOURCE_TYPE.E55"
+            }
+        },
+        {
+        "Group3": {
+            "Address":"PLACE_ADDRESS.E45",
+            "addr_type":"ADDRESS_TYPE.E55"
+            }
+        }
+    ]
+}
