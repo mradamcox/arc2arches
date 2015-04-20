@@ -6,51 +6,27 @@ import subprocess
 import csv
 import sys
 import unicodecsv
+import arcpy
 
-## try to get the path to the authority docs with the settings
-## otherwise, hardcode path to likely location
-try:
-    from crip import settings
-    auth_doc_directory = settings.CONCEPT_SCHEME_LOCATIONS
-except:
-    thisdir = os.path.dirname(sys.argv[0])
-    auth_doc_directory = os.path.join(thisdir,
-                     r"crip\source_data\concepts\authority_files")
-
-def getShapeType(reader):
+def getShapeType(feature_class):
     """ returns the shapetype of the input reader object """
-    shp_type_dict = {
-    0:"NULL",
-    1:"POINT",
-    3:"POLYLINE",
-    5:"POLYGON",
-    8:"MULTIPOINT",
-    11:"POINTZ",
-    13:"POLYLINEZ",
-    15:"POLYGONZ",
-    18:"MULTIPOINTZ",
-    21:"POINTM",
-    23:"POLYLINEM",
-    25:"POLYGONM",
-    28:"MULTIPOINTM",
-    31:"MULTIPATCH"
-    }
-
-    shp_ind = reader.shapes()[0].shapeType
-    shp_type = shp_type_dict[shp_ind]
-    if not shp_ind in (1,3,5):
-        raise Exception("{0} shapetype not supported at this time".format(
+    desc = arcpy.Describe(feature_class)
+    shp_type = desc.shapeType
+    arcpy.AddMessage(shp_type)
+    if not shp_type.upper() in ("POINT","POLYLINE","POLYGON"):
+        arcpy.AddError("{0} shapetype not supported at this time".format(
             shp_type))
-    return shp_type   
+        exit()
+    return shp_type.upper()
 
-def getWKT(shape,shp_type):
-    """ converts a shape from the shapefile libary to WKT""" 
-   
-    pointlist = [" ".join([str(i) for i in coord]) for coord in shape.points]
-    wkt = "{0} ({1})".format(shp_type,", ".join(pointlist))
-    return wkt
+##def getWKT(shape,shp_type):
+##    """ converts a shape from the shapefile libary to WKT""" 
+##   
+##    pointlist = [" ".join([str(i) for i in coord]) for coord in shape.points]
+##    wkt = "{0} ({1})".format(shp_type,", ".join(pointlist))
+##    return wkt
 
-def getFieldNames(reader):
+def getFieldNames(feature_class):
     """ return list of field names """
     fieldnames = [i[0] for i in reader.fields]
     return fieldnames
@@ -58,8 +34,10 @@ def getFieldNames(reader):
 def checkFieldsInConfig(config_fields,shp_fields):
     """makes sure all fields in the field map are present in the shapefile"""
     for i in config_fields:
-        if not str(i) in shp_fields:
-            raise Exception("Invalid field name in conflig file")
+        if not i in shp_fields:
+            arcpy.AddError("Invalid field name in conflig file:\n{0}".format(
+                i))
+            exit()
     return True
 
 def makeFieldIndex(fields,reader):
@@ -108,10 +86,11 @@ def convertTypeValue(input_value,auth_dict):
     is returned.  if it is already a conceptid, that id is returned."""
 
     if auth_dict.values().count(input_value) > 1:
-        raise Exception("""
+        arcpy.AddError("""
   There are two or more corresponding concept ids for this Preflabel.
   You'll have to find the correct conceptid and apply it to the original
   dataset.""")
+        exit()
 
     conceptid = False
     if input_value in auth_dict.keys():
@@ -124,11 +103,12 @@ def convertTypeValue(input_value,auth_dict):
                 break
 
     if not conceptid:
-        raise Exception("""
+        arcpy.AddError("""
   The value listed below can not be reconciled with the Preflabels or
   conceptids that are available for this entity type.  Double-check your
   original data before trying again.
     PROBLEM: {0}""".format(input_value))
+        exit()
                         
     return conceptid
 
@@ -158,10 +138,11 @@ def checkForAuthDoc(entity_name,auth_doc_directory):
     doc_name = entity_name[:-4] + "_AUTHORITY_DOCUMENT.csv"
     doc_path = os.path.join(auth_doc_directory,doc_name)
     if not os.path.isfile(doc_path):
-        raise Exception("""
+        arcpy.AddError("""
   This entity seems to need an authority document, yet no document was found.
   Double check settings.CONCEPT_SCHEME_LOCATIONS and make sure an authority
   document exists named:\n    {0}""".format(doc_name))
+        exit()
 
     return doc_path
 
@@ -175,46 +156,41 @@ def makeRelationsFile(arches_file):
                 "|END_DATE|RELATION_TYPE|NOTES\r\n")
     return
 
-def processSHP(infile):
+def processLayer(inlayer,config,output_dir,auth_doc_directory):
     """ process the input shapefile """
+    arcpy.AddMessage(inlayer)
 
-    outfile = os.path.splitext(infile)[0]+".arches"
-    config = os.path.splitext(infile)[0]+".conflig"
+    outfile = os.path.join(out_dir,inlayer+".arches")
     makeRelationsFile(outfile)
-    
-    if not os.path.isfile(config):
-        raise Exception("no conflig file")
+
     if os.path.isfile(outfile):
         os.remove(outfile)
 
-    ## access shapefile
-    shp = shapefile.Reader(infile)
-    shp_fields = getFieldNames(shp)
-    shp_type = getShapeType(shp)
+    fc_fields = [f.name for f in arcpy.ListFields(inlayer)]
+    shp_type = getShapeType(inlayer)
 
-    ## access conflig file
     result = parseConfligFile(config)
     res_type,config_fields,groups =  result[0],result[1],result[2]
 
     ## compare config and shp information
-    checkFieldsInConfig(config_fields,shp_fields)
-    f_index = makeFieldIndex(config_fields,shp)
+    checkFieldsInConfig(config_fields,fc_fields)
+    config_fields.append("SHAPE@WKT")
 
     ## print intro summary
-    print """FROM: {0}
+    arcpy.AddMessage("""FROM: {0}
 TO: {1}
 CONFLIGURATION: {2}
 
 resource type: {3}
 shape type: {4}
 field mapping:
-  (shape field --> arches entity)""".format(os.path.basename(infile),
-    os.path.basename(outfile),os.path.basename(config),res_type,shp_type)
+  (shape field --> arches entity)""".format(os.path.basename(inlayer),
+    os.path.basename(outfile),os.path.basename(config),res_type,shp_type))
     cnt = 1
     for group in groups:
-        print "  ~ group", cnt
+        arcpy.AddMessage("  ~ group" + str(cnt))
         for k,v in group.iteritems():
-            print "      {0} --> {1}".format(k,v)
+            arcpy.AddMessage("      {0} --> {1}".format(k,v))
         cnt+=1
 
     ## dictionary of created authority document dictionaries
@@ -225,59 +201,49 @@ field mapping:
 
     ## print file
     with open(outfile,"wb") as arches:
-        arches.write("RESOURCEID|RESOURCETYPE|ATTRIBUTENAME|ATTRIBUTEVALUE|GROUPID\r\n")
-        for rec in shp.shapeRecords()[:5]:
-            wkt = getWKT(rec.shape,shp_type)
-            arches.write("{0}|{1}|{2}|{3}|{4}\r\n".format(
-                resourceid,res_type,"SPATIAL_COORDINATES_GEOMETRY.E47",wkt,groupid))
-                
-            for group in groups:
+        arches.write(
+            "RESOURCEID|RESOURCETYPE|ATTRIBUTENAME|ATTRIBUTEVALUE|GROUPID\r\n")
+        with arcpy.da.SearchCursor(inlayer,config_fields) as rows:
+            for row in rows:
+
+                #first, write geometry row
+                wkt = row[-1]
+                arches.write("{0}|{1}|{2}|{3}|{4}\r\n".format(
+            resourceid,res_type,"SPATIAL_COORDINATES_GEOMETRY.E47",wkt,groupid))
+
+                #next, loop through fields and add values
+                for group in groups:
+                    groupid+=1
+                    for f_in, entity in group.iteritems():
+
+                        value = row[config_fields.index(f_in)]
+                        if value.rstrip() == '':
+                            continue
+
+                        ## if it's a type, it may need translation
+                        if ".E55" in entity:
+
+                            auth_path = checkForAuthDoc(entity,auth_doc_directory)
+                            if not entity in auth_dict_dict.keys():
+                                auth_dict_dict[entity] = getAuthDict(auth_path)
+                            auth_dict = auth_dict_dict[entity]
+                            value = convertTypeValue(value,auth_dict)
+
+                        arches.write("{0}|{1}|{2}|{3}|{4}\r\n".format(
+                            resourceid,res_type,entity,value,groupid))
                 groupid+=1
-                for f_in, entity in group.iteritems():
+                resourceid+=1
 
-                    value = rec.record[f_index[f_in]]
-                    if value.rstrip() == '':
-                        continue
-
-                    ## if it's a type, it may need translation
-                    if ".E55" in entity:
-
-                        auth_path = checkForAuthDoc(entity,auth_doc_directory)
-                        if not entity in auth_dict_dict.keys():
-                            auth_dict_dict[entity] = getAuthDict(auth_path)
-                        auth_dict = auth_dict_dict[entity]
-                        value = convertTypeValue(value,auth_dict)
-
-                    arches.write("{0}|{1}|{2}|{3}|{4}\r\n".format(
-                        resourceid,res_type,entity,value,groupid))
-            groupid+=1
-            resourceid+=1
-
-    return outfile    
+    return outfile   
     
-parser = argparse.ArgumentParser(description=
-        """Converts a shapefile into a .arches file, used to load data into
-an Arches (v3.0) installation.  Requires an accompanying .conflig file (an
-augmented version of the original .config  format) to handle field mapping.""",
-                                 epilog="get ready to go!")
+input_layer = arcpy.GetParameterAsText(0)
+config_file = arcpy.GetParameterAsText(1)
+auth_doc_directory = arcpy.GetParameterAsText(2)
+out_dir = arcpy.GetParameterAsText(3)
+open_output = arcpy.GetParameterAsText(4)
 
-## EXAMPLE ARGS
-##parser.add_argument('--sum', dest='accumulate', action='store_const',
-##                   const=sum, default=max,
-##                   help='sum the integers (default: find the max)')
-##parser.add_argument('--p', dest='path', action='store_const',
-##                   const=sum, default=max,
-##                   help='print something if you want')
+file_path = processLayer(input_layer,config_file,out_dir,auth_doc_directory)
 
-
-parser.add_argument("shapefile",help="path to shapefile")
-
-parser.add_argument("-of",dest="openup",action="store_true",
-                    help="open output file on completion (default=TRUE)")
-
-args = parser.parse_args()
-
-file_path = processSHP(args.shapefile)
-if args.openup:
+if open_output:
     notepadOpen(file_path)
  
