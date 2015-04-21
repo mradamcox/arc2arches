@@ -14,8 +14,8 @@ try:
     auth_doc_directory = settings.CONCEPT_SCHEME_LOCATIONS
 except:
     thisdir = os.path.dirname(sys.argv[0])
-    auth_doc_directory = os.path.join(thisdir,
-                     r"crip\source_data\concepts\authority_files")
+    auth_doc_directory = os.path.join(thisdir,os.path.basename(thisdir),
+                     r"source_data\concepts\authority_files")
 
 def getShapeType(reader):
     """ returns the shapetype of the input reader object """
