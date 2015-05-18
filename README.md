@@ -1,2 +1,24 @@
-# shp2arches
-Convert .shp to .arches, used to upload shapefiles to the Arches platform (www.archesprojects.org).  The shapefile must be accompanied by a ".conflig" file, an augmented version of the original ".config" file intended for direct shapefile uploads to Arches
+# arc2arches
+Convert ESRI spatial data formats to the .arches format for upload to an Arches v3 deployment. Arc2arches includes an ESRI toolbox (.tbx) for use in ArcMap or ArcCatalog with tools that will help to configure and ultimately convert input datasets (any dataset read by arcpy, such as a file geodatabase table or shapefile) to the .arches format.  Once a .arches file has been created, you can upload it to arches usings the built-in arches command line operations (python manage.py packages -o load_resources -s path/to/.arches/file)
+
+## simple use
+Download and unzip (or clone or fork) this repository.  Using ArcMap or ArcCatalog, navigate to the .tbx that is in the archestools directory.
+1. Create a "conflig" file to accompany the dataset you plan to convert
+2. Add groups to the conflig file to correctly map specific fields in the dataset to existing arches nodes.  Error handling has been added that relies completely on your existing autority documents, so you must set the path to those documents.
+3. Convert the datasets (multiple are fine) to .arches format. A (required) .relations file will be created as well.  The handling of relationships is described below, and is ready for improvment...
+
+## relationships between resources
+At presents, you are able to automate relationships between uploaded resources in a useful but limited manor. When using the convert to .arches tool, you are able to choose a field from each input dataset whose value will be matched with values in other selected fields in other selected datasets.  At this point, all relationship types default to RELATIONSHIP_TYPE:1.  The following two examples will illustrate the good and bad qualities of the way that relationships are handled currently.
+
+### example 1, cemetery data
+There are two datasets: one with a polygon for every grave in a cemetery, and each polygon has a plot number stored in field "plot_id", and another is a geodatabase table of all the names of individuals that are interred in these graves, with the interment grave number stored in a field also named "plot_id".  Not all graves have (indentified) individuals in them, and some graves have more than one interment.
+
+While running the Convert to .arches tool, the "plot_ids" fields are chosen as the relate fields.  When the tool has finished, relationships will have been entered in the .relations file that will connect all resources that have the same plot_id value.
+
+### example 2, building survey data
+A windshield survey was carried out, and the information to make a single Activity resource to represent it in Arches is entered in a geodatabase table.  A field is added named "surv" and its value is 'windshield'.  The survey data itself is stored in a shapefile which is actually an aggregate of many building datasets. A field is added named "survname" and all building features that were part of the windshield survey are given the value "windshield" (all others left blank).  The 
+
+When running the tool, the "surv" and "survname" fields are chosen as relate fields for the survey table and the building shapefile, respectively.  When the conversion is finished, the .relations file will have created a relationship between EVERY resource that had the same value in the relate fields.  This means that in addition to each building being associated with the windshield survey activity resource, it is also related to every other building that was part of the survey.  In this case, editing was done directly to the resulting .relations file in excel to remove all unwanted relationships between buildings
+
+## standalone shp2arches.py script
+This script is intended to be used in a command-line, preferably within the package root directory so the authority documents paths can be imported from settings.py.  It is in rough shape, right now.
