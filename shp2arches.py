@@ -6,6 +6,7 @@ import subprocess
 import csv
 import sys
 import unicodecsv
+import itertools
 
 ## try to get the path to the authority docs with the settings
 ## otherwise, hardcode path to likely location
@@ -14,8 +15,8 @@ try:
     auth_doc_directory = settings.CONCEPT_SCHEME_LOCATIONS
 except:
     thisdir = os.path.dirname(sys.argv[0])
-    auth_doc_directory = os.path.join(thisdir,os.path.basename(thisdir),
-                     r"source_data\concepts\authority_files")
+    auth_doc_directory = \
+    r"E:\CRNHA_archesproject\repo\crip\crip\source_data\concepts\authority_files"
 
 def getShapeType(reader):
     """ returns the shapetype of the input reader object """
@@ -165,22 +166,33 @@ def checkForAuthDoc(entity_name,auth_doc_directory):
 
     return doc_path
 
-def makeRelationsFile(arches_file):
+def makeRelationsFile(arches_file,relationship_dict,relation_type):
     """ makes an empty relations file to match the given arches file """
 
+    if not relation_type:
+        relation_type = "RELATIONSHIP_TYPE:1"
+
     relations = os.path.splitext(arches_file)[0]+".relations"
-    if not os.path.isfile(relations):
-        with open(relations,"wb") as rel:
-            rel.write("RESOURCEID_FROM|RESOURCEID_TO|START_DATE"\
-                "|END_DATE|RELATION_TYPE|NOTES\r\n")
+    with open(relations,"wb") as rel:
+        rel.write("RESOURCEID_FROM|RESOURCEID_TO|START_DATE"\
+            "|END_DATE|RELATION_TYPE|NOTES\r\n")
+
+        if len(relationship_dict.keys()) == 0:
+            print "no relationships to write"
+            return
+
+        for k, v in relationship_dict.iteritems():
+            for a, b in itertools.combinations(v,2):
+                rel.write("{0}|{1}|||{2}|\r\n".format(
+                a,b,relation_type,""))
+                
     return
 
-def processSHP(infile):
+def processSHP(infile,relation_info):
     """ process the input shapefile """
 
     outfile = os.path.splitext(infile)[0]+".arches"
     config = os.path.splitext(infile)[0]+".conflig"
-    makeRelationsFile(outfile)
     
     if not os.path.isfile(config):
         raise Exception("no conflig file")
@@ -197,6 +209,9 @@ def processSHP(infile):
     res_type,config_fields,groups =  result[0],result[1],result[2]
 
     ## compare config and shp information
+    relation_field = relation_info[0]
+    if relation_field:
+        config_fields.append(relation_field)
     checkFieldsInConfig(config_fields,shp_fields)
     f_index = makeFieldIndex(config_fields,shp)
 
@@ -218,7 +233,10 @@ field mapping:
         cnt+=1
 
     ## dictionary of created authority document dictionaries
-    auth_dict_dict = {}                
+    auth_dict_dict = {}
+
+    ## dictionary of related resources
+    relation_dict = {}
 
     resourceid = 100000
     groupid = 300000
@@ -226,7 +244,18 @@ field mapping:
     ## print file
     with open(outfile,"wb") as arches:
         arches.write("RESOURCEID|RESOURCETYPE|ATTRIBUTENAME|ATTRIBUTEVALUE|GROUPID\r\n")
-        for rec in shp.shapeRecords()[:5]:
+        for rec in shp.shapeRecords()[:8]:
+
+            ## get relationship key if necessary
+            if relation_field:
+                key = rec.record[f_index[relation_field]]
+                if not key.strip() == "":
+                    if key in relation_dict.keys():
+                        relation_dict[key].append(resourceid)
+                    else:
+                        relation_dict[key] = [resourceid]
+
+            ## write geometry row
             wkt = getWKT(rec.shape,shp_type)
             arches.write("{0}|{1}|{2}|{3}|{4}\r\n".format(
                 resourceid,res_type,"SPATIAL_COORDINATES_GEOMETRY.E47",wkt,groupid))
@@ -253,6 +282,8 @@ field mapping:
             groupid+=1
             resourceid+=1
 
+    makeRelationsFile(outfile,relation_dict,relation_info[1])
+
     return outfile    
     
 parser = argparse.ArgumentParser(description=
@@ -261,23 +292,24 @@ an Arches (v3.0) installation.  Requires an accompanying .conflig file (an
 augmented version of the original .config  format) to handle field mapping.""",
                                  epilog="get ready to go!")
 
-## EXAMPLE ARGS
-##parser.add_argument('--sum', dest='accumulate', action='store_const',
-##                   const=sum, default=max,
-##                   help='sum the integers (default: find the max)')
-##parser.add_argument('--p', dest='path', action='store_const',
-##                   const=sum, default=max,
-##                   help='print something if you want')
-
-
 parser.add_argument("shapefile",help="path to shapefile")
 
 parser.add_argument("-of",dest="openup",action="store_true",
                     help="open output file on completion (default=TRUE)")
 
+parser.add_argument("-rf",dest="relation_field",
+                    help="indicate a field that holds keys for related "\
+                    "resources within this dataset")
+
+parser.add_argument("-rt",dest="relation_type",
+                    help="indicate the relationship type to be applied to "\
+                    "all relationships")
+
 args = parser.parse_args()
 
-file_path = processSHP(args.shapefile)
+relation_info = (args.relation_field,args.relation_type)
+
+file_path = processSHP(args.shapefile,relation_info)
 if args.openup:
     notepadOpen(file_path)
  
