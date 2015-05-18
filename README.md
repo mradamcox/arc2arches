@@ -3,6 +3,7 @@ Convert ESRI spatial data formats to the .arches format for upload to an Arches 
 
 ## simple use
 Download and unzip (or clone or fork) this repository.  Using ArcMap or ArcCatalog, navigate to the .tbx that is in the archestools directory.
+
 1. Create a "conflig" file to accompany the dataset you plan to convert
 2. Add groups to the conflig file to correctly map specific fields in the dataset to existing arches nodes.  Error handling has been added that relies completely on your existing autority documents, so you must set the path to those documents.
 3. Convert the datasets (multiple are fine) to .arches format. A (required) .relations file will be created as well.  The handling of relationships is described below, and is ready for improvment...
