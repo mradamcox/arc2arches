@@ -195,7 +195,7 @@ def makeRelationsFile(arches_file,relation_dict):
 
     arcpy.AddMessage("\ncreating relations file")
     
-    relation_type = "RELATIONSHIP_TYPE:29"
+    relation_type = "RELATIONSHIP_TYPE:1"
     relations = os.path.splitext(arches_file)[0]+".relations"
     with open(relations,"wb") as rel:
         rel.write("RESOURCEID_FROM|RESOURCEID_TO|START_DATE"\
