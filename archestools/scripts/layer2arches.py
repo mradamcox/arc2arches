@@ -399,5 +399,8 @@ for dataset in datasets:
 makeRelationsFile(arches_file, relate_dict)
 
 if open_output:
-    notepadOpen(arches_file)
- 
+    try:
+        notepadOpen(arches_file)
+    except:
+        pass
+
