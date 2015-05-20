@@ -2,7 +2,7 @@
 Convert ESRI spatial data formats to the .arches format for upload to an Arches v3 deployment. Arc2arches includes an ESRI toolbox (.tbx) for use in ArcMap or ArcCatalog with tools that will help to configure and ultimately convert input datasets (any dataset read by arcpy, such as a file geodatabase table or shapefile) to the .arches format.  Once a .arches file has been created, you can upload it to arches usings the built-in arches command line operations (python manage.py packages -o load_resources -s path/to/.arches/file)
 
 # dependencies
-The arc2arches tools require two non-standard python packages: unicodecsv and pyshp.  The best way to fill these dependencies is install these packages with pip or easy_install.  This is the recommended route, because it's good to understand pip/easy_install and will be useful in the future.  Information on installing python packages can be found here: https://packaging.python.org/en/latest/installing.html or here: https://pythonhosted.org/setuptools/easy_install.html.
+The arc2arches tools require two non-standard python packages: unicodecsv and pyshp.  The best way to fill these dependencies is install these packages with [pip](https://packaging.python.org/en/latest/installing.html) or [easy_install](https://pythonhosted.org/setuptools/easy_install.html).  This is the recommended route, because it's good to understand pip/easy_install and will be useful in the future.
 
 However, for ease of use, these packages have been included in the arc2arches package, so if you do not want to add those packages to your python installation (or don't have permission),  you can just skip this step and the tools will use the packages that have already been included.  
 
