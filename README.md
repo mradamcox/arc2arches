@@ -13,6 +13,8 @@ Download and unzip (or clone or fork) this repository.  Using ArcMap or ArcCatal
 2. Add groups to the conflig file to correctly map specific fields in the dataset to existing arches nodes.  Error handling has been added that relies completely on your existing autority documents, so you must set the path to those documents.  NOTE: The current tool interface only allows for the addition of 10 entity:field entries into a new group.  However, you can open the .conflig file at any time in any text editor and copy/paste/write as many entries in a group as you like.
 3. Convert the datasets (multiple are fine) to .arches format. A (required) .relations file will be created as well.  The handling of relationships is described below, and is ready for improvment...
 
+Check out the official [Arches v3.0 documentation](http://arches3.readthedocs.org/en/latest/arches-data/#loading-business-data) for direction on how to upload the .arches file to your Arches installation.
+
 ## relationships between resources
 At present, you are able to automate relationships between uploaded resources in a useful but limited manor. When using the convert to .arches tool, you are able to choose a field from each input dataset whose value will be matched with values in other selected fields in other selected datasets.  At this point, all relationship types default to RELATIONSHIP_TYPE:1.  The following two examples will illustrate the good and bad qualities of the way that relationships are handled currently.
 
