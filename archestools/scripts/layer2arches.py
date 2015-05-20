@@ -9,6 +9,16 @@ import unicodecsv
 import arcpy
 import itertools
 
+## prefer site-packages modules, use local ones if necessary
+try:
+    import shapefile
+except:
+    import shapefile_local as shapefile
+try:
+    import unicodecsv
+except:
+    import unicodecsv_local as unicodecsv
+
 def checkSpatialReference(dataset):
     """ makes sure the dataset is in EPSG: 4326 (GCS WGS84) """
     sr = arcpy.Describe(dataset).spatialReference
