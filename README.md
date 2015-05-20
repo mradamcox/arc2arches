@@ -1,11 +1,16 @@
 # arc2arches
 Convert ESRI spatial data formats to the .arches format for upload to an Arches v3 deployment. Arc2arches includes an ESRI toolbox (.tbx) for use in ArcMap or ArcCatalog with tools that will help to configure and ultimately convert input datasets (any dataset read by arcpy, such as a file geodatabase table or shapefile) to the .arches format.  Once a .arches file has been created, you can upload it to arches usings the built-in arches command line operations (python manage.py packages -o load_resources -s path/to/.arches/file)
 
+# dependencies
+The arc2arches tools require two non-standard python packages: unicodecsv and pyshp.  The easiest way to install these libraries is to use pip or easy_install.  This is the recommended route, because it's good to understand pip/easy_install and will be useful in the future.  Information on installing python packages this way can be found here: https://packaging.python.org/en/latest/installing.html or here: https://pythonhosted.org/setuptools/easy_install.html.
+
+However, for ease of use, these packages have been included in the arc2arches package, so you will have to do nothing extra to use these tools.  
+
 ## simple use
 Download and unzip (or clone or fork) this repository.  Using ArcMap or ArcCatalog, navigate to the .tbx that is in the archestools directory.
 
 1. Create a "conflig" file to accompany the dataset you plan to convert
-2. Add groups to the conflig file to correctly map specific fields in the dataset to existing arches nodes.  Error handling has been added that relies completely on your existing autority documents, so you must set the path to those documents.
+2. Add groups to the conflig file to correctly map specific fields in the dataset to existing arches nodes.  Error handling has been added that relies completely on your existing autority documents, so you must set the path to those documents.  NOTE: The current tool interface only allows for the addition of 10 entity:field entries into a new group.  However, you can open the .conflig file at any time in any text editor and copy/paste/write as many entries in a group as you like.
 3. Convert the datasets (multiple are fine) to .arches format. A (required) .relations file will be created as well.  The handling of relationships is described below, and is ready for improvment...
 
 ## relationships between resources
