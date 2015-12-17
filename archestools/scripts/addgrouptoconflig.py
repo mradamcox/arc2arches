@@ -56,7 +56,7 @@ def insertNewGroup(conflig_file,input_group):
     return conflig_file
         
 
-input_config = arcpy.GetParameterAsText(1)
+input_config = arcpy.GetParameterAsText(0)
 new_entries = [
     (arcpy.GetParameterAsText(4),arcpy.GetParameterAsText(3)),
     (arcpy.GetParameterAsText(6),arcpy.GetParameterAsText(5)),

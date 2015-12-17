@@ -138,7 +138,7 @@ def convertTypeValue(input_value,auth_dict,fieldname,dataset):
   original data and conflig files before trying again.
     DATASET: {0}
     FIELD: {1}
-    PROBLEM: {2}
+    VALUE: {2}
     AUTHORITY DOCUMENT CONTENTS:
       conceptid | Preflabel""".format(dataset_name,fieldname,input_value))
         for k in conceptids:
@@ -383,10 +383,13 @@ datasets = []
 dataset_params = [3,6,9,12]
 for i in dataset_params:
     if not arcpy.GetParameterAsText(i) == "":
+        conflig_file = arcpy.GetParameterAsText(i)
+        dataset_path = arcpy.GetParameterAsText(i+1)
+        relate_field_name = arcpy.GetParameterAsText(i+2)
         info = (
-            arcpy.GetParameterAsText(i),
-            arcpy.GetParameterAsText(i+1),
-            arcpy.GetParameterAsText(i+2)
+            dataset_path,
+            conflig_file,
+            relate_field_name
         )
         datasets.append(info)
 
@@ -412,5 +415,6 @@ if open_output:
     try:
         notepadOpen(arches_file)
     except:
-        pass
+        arcpy.AddWarning("Unable to find Notepad++. Please open this file "\
+                         "manually:\n"+arches_file)
 

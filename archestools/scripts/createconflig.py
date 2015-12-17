@@ -3,11 +3,12 @@ import os
 
 in_dataset = arcpy.GetParameterAsText(0)
 out_dir = arcpy.GetParameterAsText(1)
-resource_type = arcpy.GetParameterAsText(2)
+resource_type = arcpy.GetParameterAsText(3)
 
 template_text = '{'+\
+'\n    "DATASET_PATH": "{0}",'.format(in_dataset.replace("\\","/"))+\
 '\n    "RESOURCE_TYPE": "{0}",'.format(resource_type)+\
-'\n   "GEOM_TYPE": "SPATIAL_COORDINATES_GEOMETRY.E47",'+\
+'\n    "GEOM_TYPE": "SPATIAL_COORDINATES_GEOMETRY.E47",'+\
 '\n    "FIELD_MAP": ['+\
 '\n    ]'+\
 '\n}'
