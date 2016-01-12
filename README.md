@@ -35,7 +35,9 @@ When running the tool, the "surv" and "survname" fields are chosen as relate fie
 ## standalone shp2arches.py script
 This script is intended to be used in a command-line, preferably within the package root directory so the authority documents paths can be imported from settings.py.  It is in very rough shape.
 
-## current work
+## planned improvements
 The current intent is to greatly improve the relationship handling.  At this point, a new interface has been created for the "3" tool, which you can see in the archestools_testing.tbx toolbox.  The idea is to define all datasets, and then allow the user to create specific types of relationships between any two datasets, using matching source/target fields.
 
-Another recent change is to add the DATASET_PATH as a property of the conflig file, so users only have to enter a conflig file, and the path to it's accompanying dataset will be automatically found.  All in the name of reducing the amount of user input...
+Another recent change is to add the DATASET_PATH as a property of the conflig file, so users only have to enter a conflig file, and the path to it's accompanying dataset will be automatically found.  All in the name of reducing the amount of user input.
+
+In tool "2", it would be good to allow the user to type in a value instead of choosing a field.  So Entry A would have 3 parameters: entity name, field name, and single value.  You would not be able to choose a field name and a single value, it would have to be one or the other.  If the entity chosen uses an E32 authority document, that document should be referenced to create a dropdown list in the new single value parameter.  This would eliminate the need to make a new field in the dataset named "name_type" (for example), and populate it with "Primary" for each row -- i.e. it would reduce the amount of work needed to prepare any given dataset for conversion.  However, this would require support in the "3" tool, because that tool expects field names in the .conflig file, not actual values.
