@@ -4,7 +4,7 @@ Convert ESRI spatial data formats to the .arches format for upload to an Arches 
 These tools require the cohesive set of _resource graphs_ and _authority documents_ that were used during database installation.  The choice was made to require these files because it makes things so much easier, and it allows for great quality control and error handling.
 
 # dependencies
-The arc2arches tools require two non-standard python packages: _unicodecsv_ and _pyshp_.  The best way to fill these dependencies is install these packages with [pip](https://packaging.python.org/en/latest/installing.html) or [easy_install](https://pythonhosted.org/setuptools/easy_install.html).  This is the recommended route, because it's good to understand pip/easy_install.
+The arc2arches tools require two non-standard python packages: _unicodecsv_ and _pyshp_.  One way to fill these dependencies is install these packages with [pip](https://packaging.python.org/en/latest/installing.html) or [easy_install](https://pythonhosted.org/setuptools/easy_install.html).  This is the recommended route, because it's good to understand pip/easy_install.
 
 However, for ease of use, the _unicodecsv_ and _pyshp_ packages have been included in the arc2arches package, so if you do not want to deal with pip/easy_install (or don't have permission),  you can just skip this step and the tools will use the packages that have already been included.
 
