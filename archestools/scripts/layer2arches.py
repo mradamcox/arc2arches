@@ -1,11 +1,9 @@
 import os
 import argparse
-import shapefile
 import json
 import subprocess
 import csv
 import sys
-import unicodecsv
 import arcpy
 import itertools
 
